@@ -1,36 +1,44 @@
-import processing.serial.*;
-
-/*
-version
+/* VERSIONS:
 v1.0 original: https://www.instructables.com/Pong-With-Processing/
 v1.1 theme setup, roundJoin, color management
+v1.2 retrieve data from arduino and print it in the console, improve align of the score text
 */
+
+import processing.serial.*;
+import cc.arduino.*; //need to import library sketch > Import Library > Manage Libararies > Arduino (firmata)
+Arduino arduino;
+Serial myPort;  // Create object from Serial class
+String val;     // Data received from the serial port
+
 
 Ball ball; // Define the ball as a global object 
 Serial port;
 Paddle paddleLeft;
 Paddle paddleRight;
+
+int theme = 0;
 color itemColor = color(255, 204, 0); //https://processing.org/reference/color_.html
 color bgColor =  color(80, 220, 220); 
-color strokeColor = color(180, 120, 180); 
+color strokeColor = color(90, 120, 180); 
 // color stroke = strokeColor; // stroke(value1, value2, value3, alpha);
-// char 
-// char theme = 'A';
-int theme = 0;
 
 int scoreLeft = 0;
 int scoreRight = 0;
+//int gyroX = 404; //!
+//int gyroY = 404; //!
 
 void setup(){
-  size(800,600);
-  //port = this({}) ;
+  size(666, 666);
   
   ball = new Ball(width/2, height/2, 50); //create a new ball to the center of the window
   ball.speedX = 5; // Giving the ball speed in x-axis
   ball.speedY = random(-3,3); // Giving the ball speed in y-axis
   
-  paddleLeft = new Paddle(15, height/2, 30,200);
-  paddleRight = new Paddle(width-15, height/2, 30,200);
+  paddleLeft = new Paddle(23, height/2, 17, 200);
+  paddleRight = new Paddle(width-23, height/2, 17, 200);
+  
+  String portName = Serial.list()[2]; //change the 0 to a 1 or 2 etc. to match your port, check what usbmodem 11[x]01 or run "$ lsof | grep usbmodem" on the treminal
+  myPort = new Serial(this, portName, 9600);
 }
 
 
@@ -49,6 +57,7 @@ void themeColor(){
 }
 
 
+
 void draw(){
   background(bgColor);//background(0); //clear canvas
   ball.display(); // Draw the ball to the window
@@ -59,6 +68,20 @@ void draw(){
   paddleLeft.display();
   paddleRight.move();
   paddleRight.display();
+
+
+  if ( myPort.available() > 0) {          // If data is available,
+    val = myPort.readStringUntil('\n');      // read it and store it in val
+      
+    //if(val != null && val.length() > 0){   //check if thereis data
+    //  String[] data = splitTokens(val, "\t"); //https://forum.processing.org/two/discussion/25600/how-to-split-incoming-data-from-arduino.html
+      
+      // gyroX= int(data[0]);
+      //gyroY= int(data[1]);
+      //println("X: " + gyroX + "\tY: " + gyroY);
+    //}
+  } 
+  println(val); //print it out in the console
 
   
   if (ball.right() > width) {
@@ -83,15 +106,13 @@ void draw(){
   if (paddleLeft.bottom() > height) {
     paddleLeft.y = height-paddleLeft.h/2;
   }
-
   if (paddleLeft.top() < 0) {
     paddleLeft.y = paddleLeft.h/2;
   }
-    
+
   if (paddleRight.bottom() > height) {
     paddleRight.y = height-paddleRight.h/2;
   }
-
   if (paddleRight.top() < 0) {
     paddleRight.y = paddleRight.h/2;
   }
@@ -112,14 +133,15 @@ void draw(){
   }
   
   
+  /////// SCORE TEXT
   textSize(40);
   textAlign(CENTER);
-  text(scoreRight, width/2+30, 30); // Right side score
-  text(scoreLeft, width/2-30, 30); // Left side score
+  text(scoreRight, width/2+30, height/13); // Right side score
+  text(scoreLeft, width/2-30, height/13); // Left side score
 }
 
 
-//////////////////////////// KEY PRESS /////////////
+///////////////////////// KEY PRESS /////////////
 void keyPressed(){
   if(keyCode == UP){
     paddleRight.speedY=-3;
@@ -127,6 +149,8 @@ void keyPressed(){
   if(keyCode == DOWN){
     paddleRight.speedY=3;
   }
+  
+  //// need to CHANGE TO THE GYROSCOPE  
   if(key == 'a'){
     paddleLeft.speedY=-3;
   }
@@ -142,6 +166,8 @@ void keyReleased(){
   if(keyCode == DOWN){
     paddleRight.speedY=0;
   }
+  
+  //// need to CHANGE TO THE GYROSCOPE  
   if(key == 'a'){
     paddleLeft.speedY=0;
   }
@@ -194,7 +220,6 @@ class Ball {
   float bottom(){
     return y+diameter/2;
   }
-
 }
 
 
@@ -221,9 +246,9 @@ class Paddle{
    
     /// STROKE
     stroke(strokeColor); // stroke(value1, value2, value3, alpha);
-    strokeCap(ROUND);
+    //strokeCap(ROUND);
     strokeJoin(ROUND);
-    strokeWeight(5);  // Default = 4
+    strokeWeight(3);  // Default = 4
   }
 
   void move(){
