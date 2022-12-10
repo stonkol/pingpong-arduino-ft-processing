@@ -1,8 +1,10 @@
 /* VERSIONS:
-v1.0 original: https://www.instructables.com/Pong-With-Processing/
-v1.1 theme setup, roundJoin, color management
-v1.2 retrieve data from arduino and print it in the console, improve align of the score text
+v1.0 Original: https://www.instructables.com/Pong-With-Processing/
+v1.1 Theme setup, roundJoin, color management
+v1.2 Retrieve data from arduino and print it in the console, improve align of the score text 
+v1.31 Using giro sensor X axis to move up and down. retrieve from Arduino: 7.21 Gyroscope ping pong
 */
+
 
 import processing.serial.*;
 import cc.arduino.*; //need to import library sketch > Import Library > Manage Libararies > Arduino (firmata)
@@ -15,27 +17,30 @@ Ball ball; // Define the ball as a global object
 Serial port;
 Paddle paddleLeft;
 Paddle paddleRight;
+float paddleLeftWidth = height *1.7;
+float paddleRightWidth = height *1.7;
 
-int theme = 0;
-color itemColor = color(255, 204, 0); //https://processing.org/reference/color_.html
-color bgColor =  color(80, 220, 220); 
-color strokeColor = color(90, 120, 180); 
-// color stroke = strokeColor; // stroke(value1, value2, value3, alpha);
+int theme = 2;
+color itemColor = color(87); //https://processing.org/reference/color_.html
+color bgColor =  color(227); 
+color strokeColor = color(180, 193, 180); 
 
 int scoreLeft = 0;
 int scoreRight = 0;
-//int gyroX = 404; //!
-//int gyroY = 404; //!
+int gyroX = 404;
+int gyroY = 404;
+
 
 void setup(){
-  size(666, 666);
+  size(913, 730);
+  /////// ! put font here
   
   ball = new Ball(width/2, height/2, 50); //create a new ball to the center of the window
   ball.speedX = 5; // Giving the ball speed in x-axis
   ball.speedY = random(-3,3); // Giving the ball speed in y-axis
   
-  paddleLeft = new Paddle(23, height/2, 17, 200);
-  paddleRight = new Paddle(width-23, height/2, 17, 200);
+  paddleLeft = new Paddle(23, height/2, 17, paddleLeftWidth); // paddle size
+  paddleRight = new Paddle(width-23, height/2, 17, paddleRightWidth); //!now paddle size is a variable
   
   String portName = Serial.list()[2]; //change the 0 to a 1 or 2 etc. to match your port, check what usbmodem 11[x]01 or run "$ lsof | grep usbmodem" on the treminal
   myPort = new Serial(this, portName, 9600);
@@ -51,13 +56,17 @@ void themeColor(){
   else if (theme == 2) {  
     bgColor = color(122, 2, 133);
     itemColor = color(2, 55, 133);
+  } 
+  else if (theme == 3) {  
+    bgColor = color(17);
+    itemColor = color(220);
   } else {
     println("set the original");
   }
 }
 
 
-
+////////////////////////   DRAW   ////////////////////
 void draw(){
   background(bgColor);//background(0); //clear canvas
   ball.display(); // Draw the ball to the window
@@ -69,19 +78,21 @@ void draw(){
   paddleRight.move();
   paddleRight.display();
 
+  delay(17); //58fps
+  // if ( myPort.available() > 0) {          // If data is available,
+  val = myPort.readStringUntil('\n');      // read it and store it in val
 
-  if ( myPort.available() > 0) {          // If data is available,
-    val = myPort.readStringUntil('\n');      // read it and store it in val
-      
-    //if(val != null && val.length() > 0){   //check if thereis data
-    //  String[] data = splitTokens(val, "\t"); //https://forum.processing.org/two/discussion/25600/how-to-split-incoming-data-from-arduino.html
-      
-      // gyroX= int(data[0]);
-      //gyroY= int(data[1]);
-      //println("X: " + gyroX + "\tY: " + gyroY);
-    //}
-  } 
-  println(val); //print it out in the console
+  if(val != null && val.length() > 0){   //check if thereis data
+    String[] data = splitTokens(val, "\t"); //https://forum.processing.org/two/discussion/25600/how-to-split-incoming-data-from-arduino.html
+    gyroX= int(data[0]);
+    gyroY= int(data[1]); // PROBLEM
+    println("data[1]: " + data[1]); 
+    println("X: " + gyroX + "\tY: " + gyroY); //print it out in the console
+    gyroXControl(gyroX);
+  }
+  
+  // println("val is: " + val); //print it out in the console
+  // } 
 
   
   if (ball.right() > width) {
@@ -96,26 +107,19 @@ void draw(){
   }
 
   if (ball.bottom() > height) {
-    ball.speedY = -ball.speedY;
-  }
-
+    ball.speedY = -ball.speedY;}
   if (ball.top() < 0) {
-    ball.speedY = -ball.speedY;
-  }
+    ball.speedY = -ball.speedY;}
   
   if (paddleLeft.bottom() > height) {
-    paddleLeft.y = height-paddleLeft.h/2;
-  }
+    paddleLeft.y = height-paddleLeft.h/2;}
   if (paddleLeft.top() < 0) {
-    paddleLeft.y = paddleLeft.h/2;
-  }
+    paddleLeft.y = paddleLeft.h/2;}
 
   if (paddleRight.bottom() > height) {
-    paddleRight.y = height-paddleRight.h/2;
-  }
+    paddleRight.y = height-paddleRight.h/2;}
   if (paddleRight.top() < 0) {
-    paddleRight.y = paddleRight.h/2;
-  }
+    paddleRight.y = paddleRight.h/2;}
   
   
   // If the ball gets behind the paddle 
@@ -141,7 +145,12 @@ void draw(){
 }
 
 
-///////////////////////// KEY PRESS /////////////
+///////////////////    CONTROLS   //////////////////////////
+void gyroXControl(int gyroX){
+  paddleLeft.speedY= ((gyroX-2) / 17); //-2 is error compensation of my gyro
+  // println("controlling Left: " + paddleLeft.speedY); //print it out in the console
+}
+////// KEY PRESS /////////////
 void keyPressed(){
   if(keyCode == UP){
     paddleRight.speedY=-3;
@@ -149,14 +158,15 @@ void keyPressed(){
   if(keyCode == DOWN){
     paddleRight.speedY=3;
   }
-  
-  //// need to CHANGE TO THE GYROSCOPE  
-  if(key == 'a'){
-    paddleLeft.speedY=-3;
-  }
-  if(key == 'z'){
-    paddleLeft.speedY=3;
-  }
+  // if(gyroX0){
+  //   paddleLeft.speedY=-3;
+  // }
+  // if(key == 'a'){
+  //   paddleLeft.speedY=-3;
+  // }
+  // if(key == 'z'){
+  //   paddleLeft.speedY=3;
+  // }
 }
 
 void keyReleased(){
@@ -166,14 +176,13 @@ void keyReleased(){
   if(keyCode == DOWN){
     paddleRight.speedY=0;
   }
-  
   //// need to CHANGE TO THE GYROSCOPE  
-  if(key == 'a'){
-    paddleLeft.speedY=0;
-  }
-  if(key == 'z'){
-    paddleLeft.speedY=0;
-  }
+  // if(key == 'a'){
+  //   paddleLeft.speedY=0;
+  // }
+  // if(key == 'z'){
+  //   paddleLeft.speedY=0;
+  // }
 }
 
 
@@ -204,7 +213,7 @@ class Ball {
   
   void display() {
     fill(c); //set the drawing color
-    ellipse(x,y,diameter,diameter); //draw a circle
+    ellipse(x, y,diameter,diameter); //draw a circle
   }
   
   //functions to help with collision detection
@@ -226,7 +235,6 @@ class Ball {
 
 /////////////////////  PADDLES  //////////////////
 class Paddle{
-
   float x;
   float y;
   float w;
@@ -246,7 +254,6 @@ class Paddle{
    
     /// STROKE
     stroke(strokeColor); // stroke(value1, value2, value3, alpha);
-    //strokeCap(ROUND);
     strokeJoin(ROUND);
     strokeWeight(3);  // Default = 4
   }
