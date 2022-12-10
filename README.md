@@ -1,4 +1,4 @@
-# PingPong-with-Arduino-and-Processing
+# PingPong with Arduino & Processing
 
 ## TO-DO
 

@@ -1,18 +1,28 @@
 import processing.serial.*;
 
-//https://www.instructables.com/Pong-With-Processing/
+/*
+version
+v1.0 original: https://www.instructables.com/Pong-With-Processing/
+v1.1 theme setup, roundJoin, color management
+*/
 
 Ball ball; // Define the ball as a global object 
 Serial port;
 Paddle paddleLeft;
 Paddle paddleRight;
+color itemColor = color(255, 204, 0); //https://processing.org/reference/color_.html
+color bgColor =  color(80, 220, 220); 
+color strokeColor = color(180, 120, 180); 
+// color stroke = strokeColor; // stroke(value1, value2, value3, alpha);
+// char 
+// char theme = 'A';
+int theme = 0;
 
 int scoreLeft = 0;
 int scoreRight = 0;
 
 void setup(){
   size(800,600);
-  
   //port = this({}) ;
   
   ball = new Ball(width/2, height/2, 50); //create a new ball to the center of the window
@@ -21,11 +31,26 @@ void setup(){
   
   paddleLeft = new Paddle(15, height/2, 30,200);
   paddleRight = new Paddle(width-15, height/2, 30,200);
-
 }
 
+
+////////////////// THEME ///////////////////
+void themeColor(){
+  if (theme == 1) { 
+    bgColor = color(22, 2, 33);
+    itemColor = color(2,122 ,33);
+  }
+  else if (theme == 2) {  
+    bgColor = color(122, 2, 133);
+    itemColor = color(2, 55, 133);
+  } else {
+    println("set the original");
+  }
+}
+
+
 void draw(){
-  background(0); //clear canvas
+  background(bgColor);//background(0); //clear canvas
   ball.display(); // Draw the ball to the window
   ball.move(); //calculate a new location for the ball
   ball.display(); // Draw the ball on the window
@@ -93,6 +118,8 @@ void draw(){
   text(scoreLeft, width/2-30, 30); // Left side score
 }
 
+
+//////////////////////////// KEY PRESS /////////////
 void keyPressed(){
   if(keyCode == UP){
     paddleRight.speedY=-3;
@@ -124,6 +151,7 @@ void keyReleased(){
 }
 
 
+/////////////////////  BALL //////////////////
 class Ball {
   float x;
   float y;
@@ -139,7 +167,7 @@ class Ball {
     diameter = tempDiameter;
     speedX = 0;
     speedY = 0;
-    c = (225); 
+    c = itemColor; 
   }
   
   void move() {
@@ -171,7 +199,7 @@ class Ball {
 
 
 
-
+/////////////////////  PADDLES  //////////////////
 class Paddle{
 
   float x;
@@ -189,7 +217,13 @@ class Paddle{
     h = tempH;
     speedY = 0;
     speedX = 0;
-    c=(255);
+    c=itemColor;
+   
+    /// STROKE
+    stroke(strokeColor); // stroke(value1, value2, value3, alpha);
+    strokeCap(ROUND);
+    strokeJoin(ROUND);
+    strokeWeight(5);  // Default = 4
   }
 
   void move(){
@@ -198,7 +232,7 @@ class Paddle{
   }
 
   void display(){
-    fill(c);
+    fill(itemColor); //c
     rect(x-w/2,y-h/2,w,h);
   } 
   
