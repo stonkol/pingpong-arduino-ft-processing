@@ -2,9 +2,9 @@
 
 ## TO-DO
 
-- [ ] Retrive data from Arduino
-- [ ] Transfer values to numbers in Processing
-- [ ] a functional x-axis
+- [x] Retrive data from Arduino
+- [x] Transfer values to numbers in Processing
+- [x] a functional x-axis
 - [ ] a functional y-axis
 
 ## Maybe TO-DO
@@ -18,13 +18,10 @@
 ### Screens
 
 - [ ] Theme
-
 - [ ] Start Menu
-
 - [ ] in game options menu
 
 ### TECH
 
 - [ ] BLE connection
-
 - [ ] MultiArduino player

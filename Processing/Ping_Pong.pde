@@ -3,7 +3,9 @@ v1.0 Original: https://www.instructables.com/Pong-With-Processing/
 v1.1 Theme setup, roundJoin, color management
 v1.2 Retrieve data from arduino and print it in the console, improve align of the score text 
 v1.31 Using giro sensor X axis to move up and down. retrieve from Arduino: 7.21 Gyroscope ping pong
+v1.32 Solving an error that cannot split() the serial input string, and catch gyroY
 */
+
 
 
 import processing.serial.*;
@@ -29,13 +31,14 @@ int scoreLeft = 0;
 int scoreRight = 0;
 int gyroX = 404;
 int gyroY = 404;
+String d1= "";
 
 
 void setup(){
   size(913, 730);
   /////// ! put font here
   
-  ball = new Ball(width/2, height/2, 50); //create a new ball to the center of the window
+  ball = new Ball(width/2, height/2, 43); //create a new ball to the center of the window
   ball.speedX = 5; // Giving the ball speed in x-axis
   ball.speedY = random(-3,3); // Giving the ball speed in y-axis
   
@@ -78,23 +81,35 @@ void draw(){
   paddleRight.move();
   paddleRight.display();
 
+ 
+  if ( myPort.available() > 0) {          // If data is available,
+    val = myPort.readStringUntil('\n');      // read it and store it in val
+    //println("val is: " + val); //print it out in the console
+    if(val != null && val.length() > 0){   //check if thereis data
+
+      String[] data = splitTokens(val, "\t"); //ver 3
+      // String[] data = splitTokens(val, '\t'); //https://forum.processing.org/two/discussion/25600/how-to-split-incoming-data-from-arduino.html
+      // String[] aa = {"l","e","d"};
+      // String[] baba = splitTokens(val, ",");
+      // println("test: " + baba[1]);
+
+      gyroX= int(data[0]);
+      gyroY= int(data[1]); // PROBLEM 
+      // d1= data[1]; 
+      println("X: " + data[0] + "\tY: " + data[1]); 
+      // println("X: " + gyroX + "\tY: " + data[1]); //print it out in the console
+      // gyroXControl(data[0]); // gyroXControl(gyroX);
+      gyroXControl(gyroX); // gyroXControl(gyroX);
+      // gyroYControl(data[1]);//gyroYControl(d1);
+      gyroYControl(gyroY);//gyroYControl(d1);
+    }
+    else{
+      println("val is " + val); //val is null
+    }
+  } 
   delay(17); //58fps
-  // if ( myPort.available() > 0) {          // If data is available,
-  val = myPort.readStringUntil('\n');      // read it and store it in val
-
-  if(val != null && val.length() > 0){   //check if thereis data
-    String[] data = splitTokens(val, "\t"); //https://forum.processing.org/two/discussion/25600/how-to-split-incoming-data-from-arduino.html
-    gyroX= int(data[0]);
-    gyroY= int(data[1]); // PROBLEM
-    println("data[1]: " + data[1]); 
-    println("X: " + gyroX + "\tY: " + gyroY); //print it out in the console
-    gyroXControl(gyroX);
-  }
   
-  // println("val is: " + val); //print it out in the console
-  // } 
 
-  
   if (ball.right() > width) {
     scoreLeft = scoreLeft + 1;
     ball.x = width/2;
@@ -134,8 +149,7 @@ void draw(){
   if ( ball.right() > paddleRight.left() && ball.y > paddleRight.top() && ball.y < paddleRight.bottom()) {
     ball.speedX = -ball.speedX;
     ball.speedY = map(ball.y - paddleRight.y, -paddleRight.h/2, paddleRight.h/2, -10, 10);
-  }
-  
+  }  
   
   /////// SCORE TEXT
   textSize(40);
@@ -145,11 +159,21 @@ void draw(){
 }
 
 
+
+
 ///////////////////    CONTROLS   //////////////////////////
 void gyroXControl(int gyroX){
-  paddleLeft.speedY= ((gyroX-2) / 17); //-2 is error compensation of my gyro
+  paddleLeft.speedY= (gyroX / 17); //-2 is error compensation of my gyro
   // println("controlling Left: " + paddleLeft.speedY); //print it out in the console
 }
+void gyroYControl(int gyroY){ //!String
+  // gyroY = int(SgyroY);
+  // gyroY = Integer.parseInt(SgyroY);
+  println("gyroY: " + gyroY); //print it out in the console
+  paddleLeftWidth = height*(gyroY/1); //*(gyroY/10);
+  // paddleLeft.speedY= ((gyroY-2) / 17); //-2 is error compensation of my gyro
+}
+
 ////// KEY PRESS /////////////
 void keyPressed(){
   if(keyCode == UP){
@@ -158,15 +182,6 @@ void keyPressed(){
   if(keyCode == DOWN){
     paddleRight.speedY=3;
   }
-  // if(gyroX0){
-  //   paddleLeft.speedY=-3;
-  // }
-  // if(key == 'a'){
-  //   paddleLeft.speedY=-3;
-  // }
-  // if(key == 'z'){
-  //   paddleLeft.speedY=3;
-  // }
 }
 
 void keyReleased(){
@@ -176,14 +191,9 @@ void keyReleased(){
   if(keyCode == DOWN){
     paddleRight.speedY=0;
   }
-  //// need to CHANGE TO THE GYROSCOPE  
-  // if(key == 'a'){
-  //   paddleLeft.speedY=0;
-  // }
-  // if(key == 'z'){
-  //   paddleLeft.speedY=0;
-  // }
 }
+
+
 
 
 /////////////////////  BALL //////////////////
