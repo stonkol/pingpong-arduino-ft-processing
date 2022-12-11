@@ -4,8 +4,8 @@ v1.1 Theme setup, roundJoin, color management
 v1.2 Retrieve data from arduino and print it in the console, improve align of the score text 
 v1.31 Using giro sensor X axis to move up and down. retrieve from Arduino: 7.21 Gyroscope ping pong
 v1.32 Solving an error that cannot split() the serial input string, and catch gyroY
-v1.33 Fixing send multiple parameters
-v1.
+v1.33 Printing multiple variables in one number 
+v1.34 Using giro sensor Y axis 
 */
 
 
@@ -32,7 +32,13 @@ int scoreLeft = 0;
 int scoreRight = 0;
 int gyroX = 404;
 int gyroY = 404;
-String d1= "";
+int gyroYBalSpeed = 1;
+
+
+int intX, intY;
+int decX, decY, decZ;
+int minusX, minusY, minusZ;
+int intVal;
 
 
 void setup(){
@@ -41,7 +47,7 @@ void setup(){
   
   ball = new Ball(width/2, height/2, 43); //create a new ball to the center of the window
   ball.speedX = 5; // Giving the ball speed in x-axis
-  ball.speedY = random(-3,3); // Giving the ball speed in y-axis
+  ball.speedY = random(-3,3); ////// Giving the ball speed in y-axis
   
   paddleLeft = new Paddle(23, height/2, 17, paddleLeftWidth); // paddle size
   paddleRight = new Paddle(width-23, height/2, 17, paddleRightWidth); //!now paddle size is a variable
@@ -85,22 +91,67 @@ void draw(){
  
   if ( myPort.available() > 0) {          // If data is available,
     val = myPort.readStringUntil('\n');      // read it and store it in val
+
     //println("val is: " + val); //print it out in the console
     if(val != null && val.length() > 0){   //check if thereis data
 
-      String[] data = splitTokens(val, "\t"); //ver 3
+      val = trim(val);  // trim the white space off the string:
+      intVal = int(val);
+      // println("val is " + val + "\tintValue = " + intVal); 
+
+      // String[] data = {"404", "404"};
+      // int data[] = int(splitTokens(val, ",")); //ver 3
+      // data = splitTokens(val, "\t"); //ver 3
       // String[] data = splitTokens(val, '\t'); //https://forum.processing.org/two/discussion/25600/how-to-split-incoming-data-from-arduino.html
 
-      gyroX= int(data[0]);
-      gyroY= int(data[1]); // PROBLEM 
-      // d1= data[1]; 
-      println("X: " + data[0] + "\tY: " + data[1]);
-      // gyroXControl(data[0]); // gyroXControl(gyroX);
+
+      //============= SERIAL -> VALUES=======-=========//
+      //==============================================//
+      //  minusX  decX  intX  |   minusY   decY  intY 
+      //    1     2      34          5      6     78 
+      minusX =  int((intVal /10000000)%10);  // 1
+      decX =    int((intVal /1000000) %10);  // 2
+      intX =    int((intVal /10000)   %100); // 34
+      //---------- ^ X ----- v Y ---------   
+      minusY =  int((intVal /1000)    %10);  // 5 
+      decY =    int((intVal /100)     %10);  // 6
+      intY =    int((intVal /1)       %100); // 78
+
+
+      //[2]
+      // decX = int(decX);
+      if (decX == 1) 
+        intX = int(0);
+      else if (decX == 2) 
+        intX = intX /10;
+      //[6] ////////////////////////
+      if (decY == 1) 
+        intY = int(0);
+      else if (decY == 2) 
+        intY = intY /10;
+
+      /////////// NEGATIVE ////////////
+      //[1]
+      if (minusX == 1) 
+        gyroX = intX * -1;
+      else
+        gyroX = intX;
+      //[5]
+      if (minusY == 1) 
+        gyroY = intY * -1;
+      else
+        gyroY = intY;
+   
+
+      // gyroX= int(data[0]); gyroY= int(data[1]);  
+      // println("X: " + data[0] + "\tY: " + data[1]); 
+      println("X: " + gyroX + "\tY: " + gyroY); 
       gyroXControl(gyroX); // gyroXControl(gyroX);
+      gyroYControl(gyroY);//
+      // gyroXControl(data[0]); // gyroXControl(gyroX);
       // gyroYControl(data[1]);//gyroYControl(d1);
-      gyroYControl(gyroY);//gyroYControl(d1);
     }
-    else{
+    else {
       println("val is " + val); //val is null
     }
   } 
@@ -160,24 +211,25 @@ void draw(){
 
 ///////////////////    CONTROLS   //////////////////////////
 void gyroXControl(int gyroX){
-  paddleLeft.speedY= (gyroX / 17); //-2 is error compensation of my gyro
+  paddleLeft.speedY= (gyroX / 1.4); //-2 is error compensation of my gyro
   // println("controlling Left: " + paddleLeft.speedY); //print it out in the console
 }
-void gyroYControl(int gyroY){ //!String
-  // gyroY = int(SgyroY);
-  // gyroY = Integer.parseInt(SgyroY);
-  println("gyroY: " + gyroY); //print it out in the console
-  paddleLeftWidth = height*(gyroY/1); //*(gyroY/10);
-  // paddleLeft.speedY= ((gyroY-2) / 17); //-2 is error compensation of my gyro
+void gyroYControl(int gyroY){ // bigger Y-axis -> faster ball -> smaller paddle
+  
+  // println("gyroY: " + gyroY); //print it out in the console
+
+  paddleLeftWidth = height * (gyroY/7); //*(gyroY/10);
+
+  // ball.speedY = gyroY/7 * (random(-1,1)); //v2//gyroYBalSpeed Giving the ball speed in y-axis
 }
 
 ////// KEY PRESS /////////////
 void keyPressed(){
   if(keyCode == UP){
-    paddleRight.speedY=-3;
+    paddleRight.speedY=-9;
   }
   if(keyCode == DOWN){
-    paddleRight.speedY=3;
+    paddleRight.speedY=9;
   }
 }
 

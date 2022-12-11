@@ -1,14 +1,8 @@
 /* https://docs.arduino.cc/tutorials/nano-33-ble-sense/imu-gyroscope
 
 v1.4 functions for minus, dec and int, making the serial num always being 8 figures
-1. Accelerometer range is set at [-4, +4]g -/+0.122 mg.
-      -> output data rate is fixed at 104 Hz.
-2. Gyroscope range is set at [-2000, +2000] dps +/-70 mdps.
-      -> output data rate is fixed at 104 Hz. */
+*/
 
-
-
-//// My expanded official EXAMPLE simple gyroscope ////////
 #include <Arduino_LSM9DS1.h>
 
 void setup() {
@@ -121,3 +115,10 @@ void loop() {
   }
   delay(113);
 }
+
+/*
+1. Accelerometer range is set at [-4, +4]g -/+0.122 mg.
+      -> output data rate is fixed at 104 Hz.
+2. Gyroscope range is set at [-2000, +2000] dps +/-70 mdps.
+      -> output data rate is fixed at 104 Hz. 
+*/
