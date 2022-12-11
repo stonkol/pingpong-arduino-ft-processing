@@ -25,3 +25,9 @@
 
 - [ ] BLE connection
 - [ ] MultiArduino player
+
+## KNOWLEDGE
+
+### ARDUINO
+
+1. [Arduino serial](https://www.hex705.com/arduino-to-processing-multiple-data-point/) is ASCII based and as such, the largest number that can be sent is 255. (there are work-arounds to this — but we will accept this constraint for this example).

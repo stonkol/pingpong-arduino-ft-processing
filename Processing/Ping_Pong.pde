@@ -4,8 +4,8 @@ v1.1 Theme setup, roundJoin, color management
 v1.2 Retrieve data from arduino and print it in the console, improve align of the score text 
 v1.31 Using giro sensor X axis to move up and down. retrieve from Arduino: 7.21 Gyroscope ping pong
 v1.32 Solving an error that cannot split() the serial input string, and catch gyroY
+v1.33 Fixing send multiple parameters
 */
-
 
 
 import processing.serial.*;
@@ -89,15 +89,11 @@ void draw(){
 
       String[] data = splitTokens(val, "\t"); //ver 3
       // String[] data = splitTokens(val, '\t'); //https://forum.processing.org/two/discussion/25600/how-to-split-incoming-data-from-arduino.html
-      // String[] aa = {"l","e","d"};
-      // String[] baba = splitTokens(val, ",");
-      // println("test: " + baba[1]);
 
       gyroX= int(data[0]);
       gyroY= int(data[1]); // PROBLEM 
       // d1= data[1]; 
-      println("X: " + data[0] + "\tY: " + data[1]); 
-      // println("X: " + gyroX + "\tY: " + data[1]); //print it out in the console
+      println("X: " + data[0] + "\tY: " + data[1]);
       // gyroXControl(data[0]); // gyroXControl(gyroX);
       gyroXControl(gyroX); // gyroXControl(gyroX);
       // gyroYControl(data[1]);//gyroYControl(d1);

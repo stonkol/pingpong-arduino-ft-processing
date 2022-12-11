@@ -26,14 +26,30 @@ void setup() {
 
 void loop() {
   float x, y, z;
+  // int decX, decY, decZ;
+  // int minusX, minusY, minusZ;
+  // int allPacked;
 
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
-    int intX = ((int)x)-2; 
-    int intY = (int)y;
+    int intX = map(((int)x), -2000, 2000, -99, 99); 
+    int intY = map(((int)y), -2000, 2000, -99, 99); 
+    // int intX = ((int)x) / 8; //(-255 ~ 255)
+    // int intY = ((int)y) / 8;
     // int intZ = (int)z;
-    // int intX = ((int)x)/10; 
-    // int intY = ((int)y)/10;
+    
+    // if (intX == 0){
+    //   decX = 1;
+    // }else if(intX > 0 ){
+    //   decX = 2;
+    // }else if(intX > 0){
+    //   decX = 3;
+    // }    
+
+
+    // v2 Serial print
+    // Serial.print(allPacked); // decX decY minusX minusY intX   intY
+    // Serial.print('\n');     //   1    2     3      4     5 6    78
 
     // Print x, y axys in INT
     Serial.print(intX); 
