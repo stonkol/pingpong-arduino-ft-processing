@@ -5,6 +5,7 @@ v1.2 Retrieve data from arduino and print it in the console, improve align of th
 v1.31 Using giro sensor X axis to move up and down. retrieve from Arduino: 7.21 Gyroscope ping pong
 v1.32 Solving an error that cannot split() the serial input string, and catch gyroY
 v1.33 Fixing send multiple parameters
+v1.
 */
 
 

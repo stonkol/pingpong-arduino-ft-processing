@@ -1,5 +1,6 @@
 /* https://docs.arduino.cc/tutorials/nano-33-ble-sense/imu-gyroscope
 
+v1.4 functions for minus, dec and int, making the serial num always being 8 figures
 1. Accelerometer range is set at [-4, +4]g -/+0.122 mg.
       -> output data rate is fixed at 104 Hz.
 2. Gyroscope range is set at [-2000, +2000] dps +/-70 mdps.
@@ -15,6 +16,12 @@ void setup() {
   while (!Serial);
   Serial.println("Started");
 
+  // byte START_BYTE = S;//*  //( asterisk , ASCII 42 )
+  // byte DELIMITER  = ,; //( comma , ASCII 44 )
+  // byte END_BYTE = #;
+
+
+
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
     while (1);
@@ -26,41 +33,91 @@ void setup() {
 
 void loop() {
   float x, y, z;
-  // int decX, decY, decZ;
-  // int minusX, minusY, minusZ;
-  // int allPacked;
+  int intX, intY;
+  int decX, decY;
+  int minusX, minusY;
+  int allData;
 
   if (IMU.gyroscopeAvailable()) {
     IMU.readGyroscope(x, y, z);
+   
+    
+    //[34 78] //////////////////////  
     int intX = map(((int)x), -2000, 2000, -99, 99); 
     int intY = map(((int)y), -2000, 2000, -99, 99); 
-    // int intX = ((int)x) / 8; //(-255 ~ 255)
-    // int intY = ((int)y) / 8;
-    // int intZ = (int)z;
-    
-    // if (intX == 0){
-    //   decX = 1;
-    // }else if(intX > 0 ){
-    //   decX = 2;
-    // }else if(intX > 0){
-    //   decX = 3;
-    // }    
 
 
-    // v2 Serial print
-    // Serial.print(allPacked); // decX decY minusX minusY intX   intY
-    // Serial.print('\n');     //   1    2     3      4     5 6    78
+    //[1] 4=error  1 = minus  2 = positive
+    minusX = 4; //4 will be the error, and not let the first num be 0
+    if(intX < 0) {
+      minusX = 1; 
+      intX = abs(intX);
+    }else if (intX > -1){
+      minusX = 2;}
 
-    // Print x, y axys in INT
+    //[5]///////////////////////////
+    minusY = 4; //4 will be the error, and not let the first num be 0
+    if (intY < 0) {
+      minusY = 1; 
+      intY = abs(intY);
+    }else if (intY > -1){
+      minusY = 2;}
+
+    //[2]///////////////////////////
+    decX = 3; //(intX > 10)
+    if (intX == 0){
+      decX = 1;
+      intX = 44;
+    }
+    else if ((intX < 10) && (intX > 0)){
+      decX = 2;
+      intX = intX *10;
+    }
+   
+    //[6]//////////////////////////
+    decY = 3; //(intX > 10)
+    if (intY == 0){
+      decY = 1;
+      intY = 44;
+    }
+    else if ((intY < 10) && (intY > 0)){
+      decY = 2;
+      intY = intY *10;
+    }
+
+
+    ////// PRINT ///////
+    Serial.print(minusX); 
+    Serial.print(decX); 
     Serial.print(intX); 
-    Serial.print('\t');
-    Serial.print(intY); 
-    // Serial.print('\t');
-    // Serial.print(intZ); 
-    Serial.print('\n');
 
-    // Print x, y axys in FLOAT
-    // Serial.print(x); Serial.print('\t'); Serial.print(y); Serial.print('\t'); Serial.println(z);
+    Serial.print(minusY); 
+    Serial.print(decY); 
+    Serial.print(intY);   
+
+    Serial.print('\n');    
+
+    ////// TEST ///////
+    // Serial.print("X ->"); 
+    // Serial.print(minusX); 
+    // Serial.print("\tdecX "); 
+    // Serial.print(decX); 
+    // Serial.print(" int "); 
+    // Serial.print(intX); 
+
+    // Serial.print("\tY ->"); 
+    // Serial.print(minusY); 
+    // Serial.print("\tdexY "); 
+    // Serial.print(decY); 
+    // Serial.print(" int "); 
+    // Serial.print(intY);     
+    // Serial.print("5678"); 
+    // Serial.print("123,45"); Serial.print("678"); 
+    // Serial.print('\n');    
+
+    ///////// v2 Serial print  ///////// ///////// ///////// /////////
+    // Serial.print(allPacked); //  minusX  decX  intX  |   minusY   decY  intY 
+   // Serial.print('\n');         //    1     2      34          5      6     78 
   }
-  delay(111);
+  delay(113);
 }

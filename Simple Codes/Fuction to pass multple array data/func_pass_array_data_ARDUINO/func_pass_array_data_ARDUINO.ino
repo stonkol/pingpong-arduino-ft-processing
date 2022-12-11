@@ -1,5 +1,9 @@
 // https://www.hex705.com/arduino-to-processing-multiple-data-point/
 
+#define START_BYTE *  //( asterisk , ASCII 42 )
+#define DELIMITER ,  //( comma , ASCII 44 )
+#define END_BYTE #  //( pound, ASCII 35 )
+
 void sendSensors(){
 
    // built and send package
