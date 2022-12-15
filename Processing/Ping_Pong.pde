@@ -5,13 +5,14 @@ v1.2 Retrieve data from arduino and print it in the console, improve align of th
 v1.31 Using giro sensor X axis to move up and down. retrieve from Arduino: 7.21 Gyroscope ping pong
 v1.32 Solving an error that cannot split() the serial input string, and catch gyroY
 v1.33 Printing multiple variables in one number 
-v1.34 Using giro sensor Y axis 
+v1.4 Fixing send multiple parameters
+v1.5 Cleaning and minor improvements
 */
 
 
 import processing.serial.*;
-import cc.arduino.*; //need to import library sketch > Import Library > Manage Libararies > Arduino (firmata)
-Arduino arduino;
+// import cc.arduino.*; //need to import library sketch > Import Library > Manage Libararies > Arduino (firmata)
+// Arduino arduino;
 Serial myPort;  // Create object from Serial class
 String val;     // Data received from the serial port
 
@@ -32,13 +33,16 @@ int scoreLeft = 0;
 int scoreRight = 0;
 int gyroX = 404;
 int gyroY = 404;
-int gyroYBalSpeed = 1;
+// int gyroYBalSpeed = 1;
 
 
 int intX, intY;
 int decX, decY, decZ;
 int minusX, minusY, minusZ;
 int intVal;
+int selectModesY = 0;
+float leftSpeedMultiplier = 1;
+float leftPaddleWidthMultiplier = 1;
 
 
 void setup(){
@@ -49,7 +53,9 @@ void setup(){
   ball.speedX = 5; // Giving the ball speed in x-axis
   ball.speedY = random(-3,3); ////// Giving the ball speed in y-axis
   
-  paddleLeft = new Paddle(23, height/2, 17, paddleLeftWidth); // paddle size
+  // paddleLeft = new Paddle; // paddle size
+  paddleLeft = new Paddle(23, height/2, 17, paddleLeftWidth *leftPaddleWidthMultiplier); // paddle size
+  // paddleLeft = new Paddle(23, height/2, 17, paddleLeftWidth *leftPaddleWidthMultiplier); // paddle size
   paddleRight = new Paddle(width-23, height/2, 17, paddleRightWidth); //!now paddle size is a variable
   
   String portName = Serial.list()[2]; //change the 0 to a 1 or 2 etc. to match your port, check what usbmodem 11[x]01 or run "$ lsof | grep usbmodem" on the treminal
@@ -82,12 +88,19 @@ void draw(){
   ball.display(); // Draw the ball to the window
   ball.move(); //calculate a new location for the ball
   ball.display(); // Draw the ball on the window
-  
+
   paddleLeft.move();
   paddleLeft.display();
   paddleRight.move();
   paddleRight.display();
 
+  // paddleLeft = new Paddle(23, height/2, 17, paddleLeftWidth *leftPaddleWidthMultiplier); // paddle size
+  // paddleRight = new Paddle(width-23, height/2, 17, paddleRightWidth *rightPaddleWidthMultiplier); //!now paddle size is a variable
+
+  // paddleLeft = new Paddle(23, height/2, 17, paddleLeftWidth); // paddle size
+  // paddleRight = new Paddle(width-23, height/2, 17, paddleRightWidth); //!now paddle size is a variable
+  // ball.speedX = 5 *leftSpeedMultiplier; // Giving the ball speed in x-axis
+  // ball.speedX = 5; // Giving the ball speed in x-axis
  
   if ( myPort.available() > 0) {          // If data is available,
     val = myPort.readStringUntil('\n');      // read it and store it in val
@@ -142,17 +155,13 @@ void draw(){
       else
         gyroY = intY;
    
-
-      // gyroX= int(data[0]); gyroY= int(data[1]);  
-      // println("X: " + data[0] + "\tY: " + data[1]); 
+      //////////// -> FUNCTIONS ////////
       println("X: " + gyroX + "\tY: " + gyroY); 
-      gyroXControl(gyroX); // gyroXControl(gyroX);
-      gyroYControl(gyroY);//
-      // gyroXControl(data[0]); // gyroXControl(gyroX);
-      // gyroYControl(data[1]);//gyroYControl(d1);
+      gyroXControl(gyroX); 
+      gyroYControl(gyroY);
     }
     else {
-      println("val is " + val); //val is null
+      println("val is " + val); //when val is null
     }
   } 
   delay(17); //58fps
@@ -169,11 +178,13 @@ void draw(){
     ball.y = height/2;
   }
 
+  // Ball bouncing -> top btm walls
   if (ball.bottom() > height) {
     ball.speedY = -ball.speedY;}
   if (ball.top() < 0) {
     ball.speedY = -ball.speedY;}
-  
+
+  // Paddle limits /////////////////////
   if (paddleLeft.bottom() > height) {
     paddleLeft.y = height-paddleLeft.h/2;}
   if (paddleLeft.top() < 0) {
@@ -184,46 +195,75 @@ void draw(){
   if (paddleRight.top() < 0) {
     paddleRight.y = paddleRight.h/2;}
   
-  
-  // If the ball gets behind the paddle 
-  // AND if the ball is int he area of the paddle (between paddle top and bottom)
-  // bounce the ball to other direction
 
+  // If the ball gets behind the paddle AND if the ball is in the area of the paddle (between paddle top and bottom)
+  // when ball hits LEFT PADDLE/////////////////////////////////
   if ( ball.left() < paddleLeft.right() && ball.y > paddleLeft.top() && ball.y < paddleLeft.bottom()){
-    ball.speedX = -ball.speedX;
+    // ball.speedX = ball.speedX *leftSpeedMultiplier;
+     ball.speedX = -ball.speedX;
     ball.speedY = map(ball.y - paddleLeft.y, -paddleLeft.h/2, paddleLeft.h/2, -10, 10);
   }
-
+  // when ball hits RIGHT PADDLE///////////////////////////////
   if ( ball.right() > paddleRight.left() && ball.y > paddleRight.top() && ball.y < paddleRight.bottom()) {
     ball.speedX = -ball.speedX;
     ball.speedY = map(ball.y - paddleRight.y, -paddleRight.h/2, paddleRight.h/2, -10, 10);
   }  
   
-  /////// SCORE TEXT
+
+  /////////////////// SCORE TEXT /////////////////////
   textSize(40);
   textAlign(CENTER);
   text(scoreRight, width/2+30, height/13); // Right side score
   text(scoreLeft, width/2-30, height/13); // Left side score
 }
 
-
-
-
 ///////////////////    CONTROLS   //////////////////////////
 void gyroXControl(int gyroX){
   paddleLeft.speedY= (gyroX / 1.4); //-2 is error compensation of my gyro
-  // println("controlling Left: " + paddleLeft.speedY); //print it out in the console
+  // println("controlling Left: " + paddleLeft.speedY);
 }
+
 void gyroYControl(int gyroY){ // bigger Y-axis -> faster ball -> smaller paddle
   
   // println("gyroY: " + gyroY); //print it out in the console
+  // int iSpeed = 0;
+ 
+  // when TAP on the RIGHT side of the arduino
+  // if (gyroY < -7){
+  //   selectModesY++;
+  //   println("ModesY: " + selectModesY); //print it out in the console
 
-  paddleLeftWidth = height * (gyroY/7); //*(gyroY/10);
+  //   if (selectModesY == 1){
+  //     leftSpeedMultiplier = 0.75; 
+  //     leftPaddleWidthMultiplier = 1.4;       // paddleLeftWidth = height *1.4;
+  //     println("wider");
+  //   }
+  //   if (selectModesY == 2){
+  //     leftSpeedMultiplier = 1; 
+  //     leftPaddleWidthMultiplier = 1.7; // paddleLeftWidth = height *1.7;
+  //     println("DEFAULT");  
 
+  //   }
+  //   if (selectModesY == 3){
+  //     leftSpeedMultiplier = 1.25; 
+  //     leftPaddleWidthMultiplier = 2; // paddleLeftWidth = height *2;
+  //     selectModesY = 0;
+  //     println("tighter");   
+  //   }
+    // ball.speedX = gyroY/1; //v2//gyroYBalSpeed Giving the ball speed in y-axis
+    // paddleLeftWidth = height * (gyroY/3); //*(gyroY/10);
+  // }
+  // println("modeY: " + selectModesY);
+  // int iTheme;
+  // if (gyroY > 5){
+  // }
   // ball.speedY = gyroY/7 * (random(-1,1)); //v2//gyroYBalSpeed Giving the ball speed in y-axis
 }
 
-////// KEY PRESS /////////////
+
+
+
+//////  KEY PRESS RIGHT PLAYER  /////////////
 void keyPressed(){
   if(keyCode == UP){
     paddleRight.speedY=-9;
@@ -232,14 +272,12 @@ void keyPressed(){
     paddleRight.speedY=9;
   }
 }
-
 void keyReleased(){
-  if(keyCode == UP){
+  if(keyCode == UP || keyCode == DOWN){
     paddleRight.speedY=0;
   }
-  if(keyCode == DOWN){
-    paddleRight.speedY=0;
-  }
+  // if(keyCode == UP)    paddleRight.speedY=0;
+  // if(keyCode == DOWN)  paddleRight.speedY=0;
 }
 
 
@@ -247,10 +285,8 @@ void keyReleased(){
 
 /////////////////////  BALL //////////////////
 class Ball {
-  float x;
-  float y;
-  float speedX;
-  float speedY;
+  float x, y;
+  float speedX, speedY;
   float diameter;
   color c;
   

@@ -122,3 +122,5 @@ void loop() {
 2. Gyroscope range is set at [-2000, +2000] dps +/-70 mdps.
       -> output data rate is fixed at 104 Hz. 
 */
+
+
